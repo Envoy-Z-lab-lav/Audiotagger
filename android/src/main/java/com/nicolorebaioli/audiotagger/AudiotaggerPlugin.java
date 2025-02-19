@@ -37,11 +37,14 @@ import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
+import io.flutter.embedding.engine.plugins.activity.ActivityAware;
+import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding;
+import androidx.annotation.NonNull;
 
 /**
  * AudiotaggerPlugin
  */
-public class AudiotaggerPlugin implements MethodCallHandler, FlutterPlugin {
+public class AudiotaggerPlugin implements MethodCallHandler, FlutterPlugin, ActivityAware {
     /**
      * Plugin registration.
      */
@@ -49,15 +52,17 @@ public class AudiotaggerPlugin implements MethodCallHandler, FlutterPlugin {
     private MethodChannel channel;
 
     /* Plugin registration */
-    @SuppressWarnings("deprecation")
+    // This is the v1 embedding registration.  We're removing it.
+    /*@SuppressWarnings("deprecation")
     public static void registerWith(io.flutter.plugin.common.PluginRegistry.Registrar registrar) {
         final AudiotaggerPlugin instance = new AudiotaggerPlugin();
         instance.onAttachedToEngine(registrar.context(), registrar.messenger());
-    }
+    }*/
 
+    // V2 embedding method
     @Override
-    public void onAttachedToEngine(FlutterPluginBinding binding) {
-        onAttachedToEngine(binding.getApplicationContext(), binding.getBinaryMessenger());
+    public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
+        onAttachedToEngine(flutterPluginBinding.getApplicationContext(), flutterPluginBinding.getBinaryMessenger());
     }
 
     private void onAttachedToEngine(Context applicationContext, BinaryMessenger messenger) {
@@ -67,10 +72,31 @@ public class AudiotaggerPlugin implements MethodCallHandler, FlutterPlugin {
     }
 
     @Override
-    public void onDetachedFromEngine(FlutterPluginBinding binding) {
+    public void onDetachedFromEngine(@NonNull FlutterPluginBinding binding) {
         this.context = null;
         this.channel.setMethodCallHandler(null);
         this.channel = null;
+    }
+
+    // ActivityAware interface methods
+    @Override
+    public void onAttachedToActivity(@NonNull ActivityPluginBinding binding) {
+        context = binding.getActivity(); // Store the activity context
+    }
+
+    @Override
+    public void onDetachedFromActivityForConfigChanges() {
+        context = null;
+    }
+
+    @Override
+    public void onReattachedToActivityForConfigChanges(@NonNull ActivityPluginBinding binding) {
+        context = binding.getActivity();
+    }
+
+    @Override
+    public void onDetachedFromActivity() {
+        context = null;
     }
 
     @Override
